@@ -14,8 +14,7 @@ eprint available at: https://www.mcponline.org/content/early/2019/05/06/mcp.RA11
 The program is intended to be extensible and could be modified perform additional calculations on the experimental data.
 
 Usage example:  
-Open a terminal and run `python3 -i cell_tracker.py`
-Then read in the data:  
+Open a terminal and run `python3 -i cell_tracker.py` to start an interactive session.  
 ```Python
 # Create an object for an experiment:
 exp = Experiment("test_data.xls")
@@ -30,9 +29,9 @@ cell.build_data_vec('Value')
 
 # Calculate and plot the mean-squared-displacement
 # (of all cells tracked in the experiment):
-MSD = exp.calculate_MSD()
+msd = exp.calculate_MSD()
 import matplotlib.pyplot as plt
-plt.plot(exp.times, MSD)
+plt.plot(exp.times, msd)
 plt.xlabel("Time", size=15)
 plt.ylabel(r"Mean-squared-displacement, $\langle x^2 \rangle \quad$ ($\mu m^2$)", size=15)
 plt.show()
