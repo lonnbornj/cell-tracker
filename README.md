@@ -1,6 +1,6 @@
 # cell-tracker
 
-Author: Jack Lonnborn
+Author: Jack Lonnborn  
 Date: updated May 2019
 
 This program processes raw data from a proteome profiling experiment in cancer research. In particular, it calculates the mean-squared-displacement of migrating cells in micronenvironments characterised by either cancer-associated (CAF) or non-malignant (NPF) fibroblasts. The mean-squared-displacement is (roughly) a measure of the area explored by the cells. The key question this calculation assists in addressing is: do cells in a CAF microenvironment migrate more aggressively than those in an NPF?
