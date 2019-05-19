@@ -10,17 +10,18 @@ The results of this research have been published in:
 ---
 
 	Nguyen, E. V. and B. A. Pereira et al, "Proteomic profiling of human prostate cancer-associated fibroblasts (CAF) reveals LOXL2-dependent regulation of the tumor microenvironment" (2019) Molecular & Cellular Proteomics  
-	
+
 ---  
 eprint available at: https://www.mcponline.org/content/early/2019/05/06/mcp.RA119.001496
 
 The program is intended to be extensible and could be modified perform additional calculations on the experimental data.
 
 Usage example:  
-Open a terminal and run `python3 -i cell_tracker.py` to start an interactive session.  
+Open a terminal and run `python3 -i cell_tracker.py` to start an interactive session. Then read in and study the data:
 ```Python
 # Create an object for an experiment:
 exp = Experiment("test_data.xls")
+# Print some basic properties:
 exp.microenvironment, exp.num_cells
 exp.times
 exp.cell_ids
