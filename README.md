@@ -20,9 +20,10 @@ Usage example:
 Open a terminal and run `python3 -i cell_tracker.py` to start an interactive session. Then read in and study the data:
 ```Python
 # Create an object for an experiment:
-exp = Experiment("test_data.xls")
+exp = Experiment("test_data.xls", 'Displacement^2')
 # Print some basic properties:
-exp.microenvironment, exp.num_cells
+exp.microenvironment
+exp.num_cells
 exp.times
 exp.cell_ids
 
@@ -34,9 +35,10 @@ cell.build_data_vec('Value')
 # Calculate and plot the mean-squared-displacement
 # (of all cells tracked in the experiment):
 msd = exp.calculate_MSD()
+units = exp.get_sheet_units()
 import matplotlib.pyplot as plt
 plt.plot(exp.times, msd)
 plt.xlabel("Time", size=15)
-plt.ylabel(r"Mean-squared-displacement, $\langle x^2 \rangle \quad$ ($\mu m^2$)", size=15)
+plt.ylabel(r"Mean-squared-displacement, $\langle x^2 \rangle \quad$ (${}$)".format(units), size=15)
 plt.show()
 ```

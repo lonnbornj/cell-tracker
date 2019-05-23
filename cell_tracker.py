@@ -17,10 +17,10 @@ from os import path
 
 class Experiment(object):
 
-	def __init__(self, filename):
-		sheet = 'Displacement^2'
+	def __init__(self, filename, sheet):
 		self.filename = filename
-		self.data = pd.read_excel(self.filename, sheet_name=sheet, header=1, skiprows=0)
+		self.sheet = sheet
+		self.data = pd.read_excel(self.filename, sheet_name=self.sheet, header=1, skiprows=0)
 		self.times = self.get_unique_vals('Time')
 		self.cell_ids = self.get_unique_vals('TrackID')
 		self.num_cells = len(self.cell_ids)
@@ -41,6 +41,15 @@ class Experiment(object):
 		else:
 			microenvironment = "Unknown"
 		return microenvironment
+
+	def get_sheet_units(self):
+		"""Gets the units in which the quantity on `sheet` is reported"""
+		unit_vec = np.unique(self.data['Unit'])
+		if len(unit_vec)==1:
+			return np.unique(unit_vec)[0]
+		else:
+			print("Warning: units multiply defined in sheet '{}'".format(self.sheet))
+			return "Unknown"
 
 	def map_timesTodata(self, column='Value'):
 		"""Creates a dictionary with key: time, value: numpy array containing data from `column` which corresponds to that time"""
@@ -78,18 +87,20 @@ class Cell(object):
 
 # Usage example
 ######################################
-# exp = Experiment("test_data.xls")
+# exp = Experiment("test_data.xls", 'Displacement^2')
 # print(exp.microenvironment, exp.num_cells)
 # print(exp.times)
 # print(exp.cell_ids)
+# print(exp.sheet)
 # cell = Cell(exp, exp.cell_ids[16])
 # print(cell.times_w_data)
 # print(cell.build_data_vec('Value'))
 
 # MSD = exp.calculate_MSD()
+# units = exp.get_sheet_units()
 # import matplotlib.pyplot as plt
 # plt.plot(exp.times, MSD)
 # plt.xlabel("Time", size=15)
-# plt.ylabel(r"Mean-squared-displacement, $\langle x^2 \rangle \quad$ ($\mu m^2$)", size=15)
+# plt.ylabel(r"Mean-squared-displacement, $\langle x^2 \rangle \quad$ (${}$)".format(units), size=15)
 # plt.show()
 ######################################
