@@ -1,5 +1,6 @@
 """
-Filename: cell_tracker.py
+Filename: cell_tracker-2.py
+Version: 2.0
 Author: Jack Lonnborn
 Date: updated May 2019
 
@@ -8,21 +9,29 @@ This program processes raw data from a proteome profiling experiment in cancer r
 The results of this research have been published in:
 	Nguyen, E. V. and B. A. Pereria et al, "Proteomic profiling of human prostate cancer-associated fibroblasts (CAF) reveals LOXL2-dependent regulation of the tumor microenvironment" (2019) Molecular & Cellular Proteomics
 eprint available at: https://www.mcponline.org/content/early/2019/05/06/mcp.RA119.001496
+
+The experimental data comes from time-lapse videos of samples which are analysed using propeitary object tracking software by Imaris. More information: https://imaris.oxinst.com/products/imaris-for-tracking
 """
+
 import pandas as pd
 import numpy as np
-import itertools
 import re
 from os import path
+import sys
 
-class Experiment(object):
+class Sheet(object):
 
 	def __init__(self, filename, sheet):
 		self.filename = filename
 		self.sheet = sheet
+		if re.search("Track", self.sheet):
+			# cells are labelled by `ID` or `TrackID` depending on the sheet
+			self.id_label = 'ID'
+		else:
+			self.id_label = 'TrackID'
 		self.data = pd.read_excel(self.filename, sheet_name=self.sheet, header=1, skiprows=0)
 		self.times = self.get_unique_vals('Time')
-		self.cell_ids = self.get_unique_vals('TrackID')
+		self.cell_ids = self.get_unique_vals(self.id_label)
 		self.num_cells = len(self.cell_ids)
 		
 	def get_unique_vals(self, column):
@@ -42,6 +51,10 @@ class Experiment(object):
 			microenvironment = "Unknown"
 		return microenvironment
 
+	@property
+	def num_data_cols(self):
+		return self.data.columns.get_loc('Unit')
+	
 	def get_sheet_units(self):
 		"""Gets the units in which the quantity on `sheet` is reported"""
 		unit_vec = np.unique(self.data['Unit'])
@@ -51,19 +64,22 @@ class Experiment(object):
 			print("Warning: units multiply defined in sheet '{}'".format(self.sheet))
 			return "Unknown"
 
-	def map_timesTodata(self, column='Value'):
-		"""Creates a dictionary with key: time, value: numpy array containing data from `column` which corresponds to that time"""
-		data_of_t = {}
-		for time in self.times:
+	def data_array(self):
+		"""Returns a len(times) numpy array, each element of which is a tuple containing
+		(time, x) where x is a numpy array containing values from the data columns of `sheet` which correspond to `time`."""
+		data_array = np.empty(len(self.times), dtype=object)
+		for i, time in enumerate(self.times):
 			mask = self.data['Time'].values==time
-			data_of_t[time] = self.data[column].values[mask]
-		return data_of_t
-
+			data_array[i] = (time, self.data.iloc[:,:self.num_data_cols].values[mask])
+		return data_array
+		
 	def calculate_MSD(self):
-		ds_data = self.map_timesTodata(column='Value')
+		if self.sheet != 'Displacement^2':
+			sys.exit("Initialise Sheet object with sheet=`Displacement^2` to calculate mean-squared-displacement!")
+		ds_data = self.data_array()
 		msd_data = []
-		for time in ds_data.keys():
-			msd_data.append(np.mean(ds_data[time]))
+		for row in ds_data:
+			msd_data.append(np.mean(row[1]))
 		return msd_data
 
 class Cell(object):
@@ -75,32 +91,19 @@ class Cell(object):
 	@property
 	def times_w_data(self):
 		"""Returns the times for which we have data for this cell"""
-		times_w_data = [x[0] for x in self.build_data_vec('Time')]
+		mask = self.experiment.data[self.experiment.id_label].values==self.cell_id
+		times_w_data = np.sort(self.experiment.data['Time'][mask].values)
 		return times_w_data
 
-	def build_data_vec(self, column):
-		"""Returns a list of (time, value) tuples"""
-		all_data = self.experiment.data
-		mask = all_data['TrackID'].values==self.cell_id
-		cell_data = list((t, val) for t, val in zip(all_data['Time'].values[mask], all_data[column].values[mask]))
-		return cell_data
-
-# Usage example
-######################################
-# exp = Experiment("test_data.xls", 'Displacement^2')
-# print(exp.microenvironment, exp.num_cells)
-# print(exp.times)
-# print(exp.cell_ids)
-# print(exp.sheet)
-# cell = Cell(exp, exp.cell_ids[16])
-# print(cell.times_w_data)
-# print(cell.build_data_vec('Value'))
-
-# MSD = exp.calculate_MSD()
-# units = exp.get_sheet_units()
-# import matplotlib.pyplot as plt
-# plt.plot(exp.times, MSD)
-# plt.xlabel("Time", size=15)
-# plt.ylabel(r"Mean-squared-displacement, $\langle x^2 \rangle \quad$ (${}$)".format(units), size=15)
-# plt.show()
-######################################
+	def data_array(self):
+		"""Returns a len(times) numpy array, each element of which is a tuple containing
+		(time, x) where x is a numpy array containing values from the data columns of `sheet` which correspond to `time` for this cell."""
+		data_array = np.empty(len(self.times_w_data), dtype=object)
+		exp = self.experiment
+		cell_mask = exp.data[exp.id_label].values==self.cell_id
+		for i, time in enumerate(self.times_w_data):
+			time_mask = exp.data['Time'].values==time
+			full_mask = [all(mask) for mask in zip(time_mask, cell_mask)]
+			data_columns = exp.data.iloc[:,:exp.num_data_cols].values
+			data_array[i] = (time, data_columns[full_mask][0])
+		return data_array
