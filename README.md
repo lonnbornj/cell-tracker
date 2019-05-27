@@ -20,7 +20,7 @@ Usage example:
 Open a terminal and run `python3 -i cell_tracker.py` to start an interactive session. Then read in and study the data:
 ```Python
 # Create an object for an experiment:
-exp = Experiment("test_data.xls", 'Displacement^2')
+exp = Sheet("test_data.xls", 'Displacement^2')
 # Print some basic properties:
 exp.microenvironment
 exp.num_cells
@@ -30,7 +30,6 @@ exp.cell_ids
 # Create an object for one of the tracked cells:
 cell = Cell(exp, exp.cell_ids[16])
 cell.times_w_data
-cell.build_data_vec('Value')
 
 # Calculate and plot the mean-squared-displacement
 # (of all cells tracked in the experiment):
